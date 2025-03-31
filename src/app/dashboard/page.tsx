@@ -35,7 +35,7 @@ export default function Dashboard() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-gray-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -43,21 +43,25 @@ export default function Dashboard() {
       transition={{ duration: 0.5 }}
     >
       <DashboardHeader />
-      
-      <motion.main 
-        className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8"
+
+      <motion.main
+        className="max-w-[90%] mx-auto py-6 px-4 sm:px-6 lg:px-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <motion.div 
-          className="flex flex-col space-y-8"
+        <motion.div
+          className="flex flex-col lg:flex-row lg:space-x-6 space-y-8 lg:space-y-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          <SMSSender onSMSSent={handleSMSSent} />
-          {userId && <HistoryTable userId={userId} refreshTrigger={refreshHistory} />}
+          <div className="lg:w-1/2">
+            <SMSSender onSMSSent={handleSMSSent} />
+          </div>
+          <div className="lg:w-1/2">
+            {userId && <HistoryTable userId={userId} refreshTrigger={refreshHistory} />}
+          </div>
         </motion.div>
       </motion.main>
     </motion.div>
