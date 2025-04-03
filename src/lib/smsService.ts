@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { v4 as uuidv4 } from 'uuid';
-import { saveSMSLog } from './database';
+import { saveSMSLog, deductCoins } from './database';
 
 export interface SendSMSResult {
   success: boolean;
@@ -8,6 +8,8 @@ export interface SendSMSResult {
   totalCount: number;
   successCount: number;
   failureCount: number;
+  coinsUsed: number;
+  newBalance: number;
 }
 
 export const processPhoneNumbers = (input: string): string[] => {
@@ -42,9 +44,18 @@ export const sendSMS = async (userId: string, phoneNumbers: string[]): Promise<S
       message: 'Nenhum número válido encontrado',
       totalCount: 0,
       successCount: 0,
-      failureCount: 0
+      failureCount: 0,
+      coinsUsed: 0,
+      newBalance: 0
     };
   }
+  
+  // Cada SMS custa 1 moeda
+  const coinCost = totalCount;
+  
+  // Deduzir moedas do saldo do usuário
+  // Isso lançará um erro se o saldo for insuficiente
+  const newBalance = await deductCoins(userId, coinCost);
 
   // Simulação: entre 80% e 95% de sucesso
   const successRate = 0.8 + Math.random() * 0.15;
@@ -62,9 +73,11 @@ export const sendSMS = async (userId: string, phoneNumbers: string[]): Promise<S
 
   return {
     success: true,
-    message: `SMS enviados com ${successCount} sucessos e ${failureCount} falhas`,
+    message: `SMS enviados com ${successCount} sucessos e ${failureCount} falhas. Custo: ${coinCost} moedas.`,
     totalCount,
     successCount,
-    failureCount
+    failureCount,
+    coinsUsed: coinCost,
+    newBalance
   };
 };

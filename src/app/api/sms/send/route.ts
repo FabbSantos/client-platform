@@ -15,11 +15,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Nenhum número válido encontrado' }, { status: 400 });
     }
 
-    const result = await sendSMS(userId, phoneNumbers);
+    try {
+      const result = await sendSMS(userId, phoneNumbers);
+      return NextResponse.json(result);
+    } catch (err: unknown) {
+      // Capturar especificamente erros relacionados a saldo insuficiente
+      if (err instanceof Error && err.message.includes('Saldo insuficiente')) {
+        return NextResponse.json({ 
+          error: 'Saldo insuficiente de moedas. Adicione mais moedas para continuar.' 
+        }, { status: 402 }); // 402 Payment Required
+      }
+      throw err; // Relançar outros erros
+    }
 
-    return NextResponse.json(result);
-
-  } catch {
-    return NextResponse.json({ error: 'Erro ao processar o envio de SMS' }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('Erro ao enviar SMS:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Erro ao processar o envio de SMS' 
+    }, { status: 500 });
   }
 }
