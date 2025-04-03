@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { User } from '../lib/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedContainer, { AnimatedButton } from './AnimatedContainer';
+import { useCoins } from '../hooks/useCoinsContext';
 
 interface SMSResult {
   success: boolean;
@@ -11,6 +12,8 @@ interface SMSResult {
   totalCount: number;
   successCount: number;
   failureCount: number;
+  coinsUsed?: number;
+  newBalance?: number;
 }
 
 interface SMSSenderProps {
@@ -26,6 +29,9 @@ export default function SMSSender({ onSMSSent }: SMSSenderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Usar o contexto de moedas
+  const { updateCoins } = useCoins();
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -119,6 +125,11 @@ export default function SMSSender({ onSMSSent }: SMSSenderProps) {
       
       setResult(data);
       
+      // Atualizar o saldo de moedas usando o contexto
+      if (data.newBalance !== undefined) {
+        updateCoins(data.newBalance);
+      }
+      
       // Notificar o componente pai que um SMS foi enviado
       if (onSMSSent) {
         onSMSSent();
@@ -156,6 +167,25 @@ export default function SMSSender({ onSMSSent }: SMSSenderProps) {
       >
         Enviar SMS
       </motion.h2>
+      
+      {/* Aviso sobre custo */}
+      <motion.div 
+        className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-md"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <div className="flex items-center">
+          <svg className="h-5 w-5 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <span className="text-blue-700 font-medium">Informação de Custo</span>
+        </div>
+        <p className="mt-1 text-sm text-blue-600">
+          Cada número processado custa <span className="font-bold">1 moeda</span> do seu saldo.
+          O valor será debitado automaticamente após o envio bem-sucedido.
+        </p>
+      </motion.div>
       
       <AnimatePresence>
         {error && (
@@ -196,6 +226,19 @@ export default function SMSSender({ onSMSSent }: SMSSenderProps) {
               >
                 {result.message}
               </motion.p>
+              
+              {result.coinsUsed && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-2 text-sm text-amber-700"
+                >
+                  <span className="font-semibold">Custo:</span> {result.coinsUsed} moedas | 
+                  <span className="font-semibold"> Saldo restante:</span> {result.newBalance} moedas
+                </motion.p>
+              )}
+              
               <div className="mt-2 grid grid-cols-3 gap-4">
                 <motion.div 
                   className="text-center p-2 bg-gray-100 rounded"
@@ -309,6 +352,11 @@ export default function SMSSender({ onSMSSent }: SMSSenderProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500">
+              Total estimado: <span className="font-semibold">{phoneNumbers.trim() ? phoneNumbers.split(/[\r\n;]+/).filter(n => n.trim()).length : 0} moedas</span>
+            </span>
+          </div>
           <AnimatedButton
             disabled={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
