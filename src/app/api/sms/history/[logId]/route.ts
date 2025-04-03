@@ -1,17 +1,20 @@
+import { db } from '../../../../../lib/firebase';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteSMSLog } from '../../../../../lib/database';
 
+// Updated typing for the route handler
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { logId: string } }
+    request: NextRequest,
+    context: { params: Promise<{ logId: string }> }
 ) {
   try {
-    // Access the logId directly from params
-    const { logId } = await params;
+      // Await the params promise
+      const resolvedParams = await context.params;
+      const { logId } = resolvedParams;
 
-    // Obtenha o userId do corpo da requisição
-    const body = await request.json();
-    const { userId } = body;
+      // Rest of your code...
+      const body = await request.json();
+      const { userId } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'ID do usuário não fornecido' }, { status: 400 });
@@ -21,33 +24,24 @@ export async function DELETE(
       return NextResponse.json({ error: 'ID do registro não fornecido' }, { status: 400 });
     }
 
-    // Implementação direta da lógica de exclusão
-    try {
-      await deleteSMSLog(logId, userId);
-    } catch (error) {
-      console.error('Erro ao chamar deleteSMSLog:', error);
+    // Verificar se o log existe e pertence ao usuário
+    const logRef = doc(db, 'smsLogs', logId);
+    const logSnapshot = await getDoc(logRef);
 
-      // Implementação alternativa caso a função deleteSMSLog não esteja funcionando
-      const { db } = await import('../../../../../lib/firebase');
-      const { doc, getDoc, deleteDoc } = await import('firebase/firestore');
-
-      // Verificar se o log existe e pertence ao usuário
-      const logRef = doc(db, 'smsLogs', logId);
-      const logSnapshot = await getDoc(logRef);
-
-      if (!logSnapshot.exists()) {
-        throw new Error('Registro não encontrado');
-      }
-
-      const logData = logSnapshot.data();
-
-      if (logData.userId !== userId) {
-        throw new Error('Você não tem permissão para excluir este registro');
-      }
-
-      // Excluir o documento
-      await deleteDoc(logRef);
+    if (!logSnapshot.exists()) {
+      return NextResponse.json({ error: 'Registro não encontrado' }, { status: 404 });
     }
+
+    const logData = logSnapshot.data();
+
+    if (logData.userId !== userId) {
+      return NextResponse.json({
+        error: 'Você não tem permissão para excluir este registro'
+      }, { status: 403 });
+    }
+
+    // Excluir o documento
+    await deleteDoc(logRef);
 
     return NextResponse.json({
       success: true,

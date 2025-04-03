@@ -27,6 +27,7 @@ export const register = async (username: string, email: string, password: string
     username,
     email,
     password, // Em produção usaríamos hash
+    coins: 0,
   });
 
   return {
