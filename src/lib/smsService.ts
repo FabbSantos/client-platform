@@ -35,7 +35,12 @@ export const processPhoneNumbers = (input: string): string[] => {
   return result;
 };
 
-export const sendSMS = async (userId: string, phoneNumbers: string[]): Promise<SendSMSResult> => {
+export const sendSMS = async (
+  userId: string, 
+  phoneNumbers: string[], 
+  senderName?: string, 
+  messageContent?: string
+): Promise<SendSMSResult> => {
   const totalCount = phoneNumbers.length;
 
   if (totalCount === 0) {
@@ -62,18 +67,23 @@ export const sendSMS = async (userId: string, phoneNumbers: string[]): Promise<S
   const successCount = Math.floor(totalCount * successRate);
   const failureCount = totalCount - successCount;
 
-  // Salvar log no banco de dados
+  // Salvar log no banco de dados com informações adicionais
   await saveSMSLog({
     userId,
     date: new Date().toISOString(),
     totalNumbers: totalCount,
     successCount,
-    failureCount
+    failureCount,
+    senderName: senderName || 'Padrão',
+    messageContent: messageContent || 'Mensagem não especificada'
   });
+
+  // Mensagem personalizada incluindo o número do remetente se disponível
+  const senderInfo = senderName ? ` de ${senderName}` : '';
 
   return {
     success: true,
-    message: `SMS enviados com ${successCount} sucessos e ${failureCount} falhas. Custo: ${coinCost} moedas.`,
+    message: `SMS${senderInfo} enviados com ${successCount} sucessos e ${failureCount} falhas. Custo: ${coinCost} moedas.`,
     totalCount,
     successCount,
     failureCount,

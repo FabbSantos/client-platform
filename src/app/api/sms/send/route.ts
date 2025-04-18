@@ -3,10 +3,14 @@ import { processPhoneNumbers, sendSMS } from '../../../../lib/smsService';
 
 export async function POST(request: Request) {
   try {
-    const { userId, phoneNumbersText } = await request.json();
+    const { userId, phoneNumbersText, senderName, messageContent } = await request.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'Usuário não identificado' }, { status: 401 });
+    }
+
+    if (!messageContent || !messageContent.trim()) {
+      return NextResponse.json({ error: 'Conteúdo da mensagem não pode estar vazio' }, { status: 400 });
     }
 
     const phoneNumbers = processPhoneNumbers(phoneNumbersText);
@@ -16,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const result = await sendSMS(userId, phoneNumbers);
+      const result = await sendSMS(userId, phoneNumbers, senderName, messageContent);
       return NextResponse.json(result);
     } catch (err: unknown) {
       // Capturar especificamente erros relacionados a saldo insuficiente
