@@ -21,6 +21,8 @@ export interface SMSLog {
   totalNumbers: number;
   successCount: number;
   failureCount: number;
+  senderName?: string;   // Novo campo opcional
+  messageContent?: string; // Novo campo opcional
 }
 
 // Referências para as coleções
@@ -47,7 +49,9 @@ const convertDocToSMSLog = (doc: QueryDocumentSnapshot<DocumentData>): SMSLog =>
     date: data.date,
     totalNumbers: data.totalNumbers,
     successCount: data.successCount,
-    failureCount: data.failureCount
+    failureCount: data.failureCount,
+    senderName: data.senderName,
+    messageContent: data.messageContent
   };
 };
 
