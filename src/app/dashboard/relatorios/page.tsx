@@ -174,7 +174,7 @@ export default function RelatoriosPage() {
           'Status', 
           'Remetente', 
           'Mensagem', 
-          'Erro (se houver)'
+          'Erro'
         ];
         
         const csvData = allDetailLogs.map(detail => {
@@ -342,7 +342,7 @@ export default function RelatoriosPage() {
               <button
                 onClick={exportToCSV}
                 disabled={filteredLogs.length === 0}
-                className="px-4 py-2 bg-tauro-accent text-white rounded-md hover:bg-tauro-orange focus:outline-none focus:ring-2 focus:ring-tauro-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 py-2 bg-slate-700 text-white cursor-pointer rounded-md hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-tauro-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

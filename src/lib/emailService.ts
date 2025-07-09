@@ -90,7 +90,7 @@ export const sendCampaignNotification = async (data: EmailNotificationData): Pro
     }
     
 
-    
+
     // URL de preview do Ethereal
     if (info.messageId) {
       const previewUrl = nodemailer.getTestMessageUrl(info);
@@ -180,7 +180,7 @@ const generateEmailTemplate = (data: EmailNotificationData): string => {
         <div class="container">
             <div class="header">
                 <h1>📱 Nova Campanha SMS Enviada</h1>
-                <p style="opacity: 0.9; margin: 5px 0;">Tauro Digital - Plataforma Profissional de SMS</p>
+                <p style="opacity: 0.9; margin: 5px 0;">Tauro Digital</p>
                 <p style="font-size: 14px; opacity: 0.8;">ID da Campanha: ${data.campaignId}</p>
             </div>
             
