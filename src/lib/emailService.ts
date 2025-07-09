@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 export interface EmailNotificationData {
   campaignId: string;
@@ -12,6 +14,7 @@ export interface EmailNotificationData {
   messageContent: string;
   sentAt: string;
   coinsUsed: number;
+  phoneNumbers?: string[]; // Nova propriedade para a base de números
 }
 
 // Lista pré-definida de emails para notificação
@@ -41,17 +44,67 @@ const createTransporter = () => {
   });
 };
 
+// Função para criar arquivo CSV com a base de números
+const createPhoneNumbersFile = async (phoneNumbers: string[], campaignId: string): Promise<string> => {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `base-numeros-${campaignId}-${timestamp}.csv`;
+  const filePath = path.join(process.cwd(), 'temp', fileName);
+  
+  // Criar diretório temp se não existir
+  const tempDir = path.join(process.cwd(), 'temp');
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  
+  // Criar conteúdo CSV
+  const csvContent = [
+    'Número de Telefone',
+    ...phoneNumbers
+  ].join('\n');
+  
+  // Escrever arquivo
+  fs.writeFileSync(filePath, '\uFEFF' + csvContent, 'utf8'); // \uFEFF para BOM UTF-8
+  
+  return filePath;
+};
+
+// Função para limpar arquivos temporários
+const cleanupTempFile = (filePath: string) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log('📁 Arquivo temporário removido:', filePath);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao remover arquivo temporário:', error);
+  }
+};
+
 export const sendCampaignNotification = async (data: EmailNotificationData): Promise<void> => {
+  let tempFilePath: string | null = null;
+  
   try {
     const transporter = createTransporter();
     
+    // Criar anexo se houver números de telefone
+    const attachments: import('nodemailer/lib/mailer').Attachment[] = [];
+    if (data.phoneNumbers && data.phoneNumbers.length > 0) {
+      tempFilePath = await createPhoneNumbersFile(data.phoneNumbers, data.campaignId);
+      attachments.push({
+        filename: `base-numeros-campanha-${data.campaignId}.csv`,
+        path: tempFilePath,
+        contentType: 'text/csv; charset=utf-8'
+      });
+    }
+    
     // Preparar dados do email
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Nexus SMS" <veronica.hegmann@ethereal.email>',
+      from: process.env.EMAIL_FROM || '"Tauro Digital SMS" <veronica.hegmann@ethereal.email>',
       to: NOTIFICATION_EMAILS.join(', '),
       subject: `Nova Campanha SMS Enviada - ID: ${data.campaignId}`,
       html: generateEmailTemplate(data),
-      text: generateTextTemplate(data) // Versão texto como fallback
+      text: generateTextTemplate(data),
+      attachments: attachments
     };
 
     // Enviar email
@@ -59,6 +112,10 @@ export const sendCampaignNotification = async (data: EmailNotificationData): Pro
     
     console.log('✅ Email de notificação enviado com sucesso');
     console.log('Message ID:', info.messageId);
+    
+    if (data.phoneNumbers && data.phoneNumbers.length > 0) {
+      console.log('📎 Base de números anexada:', data.phoneNumbers.length, 'números');
+    }
     
     // URL de preview do Ethereal
     if (info.messageId) {
@@ -70,6 +127,14 @@ export const sendCampaignNotification = async (data: EmailNotificationData): Pro
   } catch (error) {
     console.error('❌ Erro ao enviar email de notificação:', error);
     // Não interromper o processo se o email falhar
+  } finally {
+    // Limpar arquivo temporário
+    if (tempFilePath) {
+      // Aguardar um pouco antes de limpar para garantir que o email foi enviado
+      setTimeout(() => {
+        cleanupTempFile(tempFilePath as string);
+      }, 5000);
+    }
   }
 };
 
@@ -78,7 +143,7 @@ const generateTextTemplate = (data: EmailNotificationData): string => {
   const formattedDate = new Date(data.sentAt).toLocaleString('pt-BR');
   
   return `
-NOVA CAMPANHA SMS ENVIADA
+NOVA CAMPANHA SMS ENVIADA - TAURO DIGITAL
 
 ID da Campanha: ${data.campaignId}
 Data/Hora: ${formattedDate}
@@ -94,6 +159,10 @@ ESTATÍSTICAS:
 
 CONTEÚDO DA MENSAGEM:
 "${data.messageContent}"
+
+${data.phoneNumbers && data.phoneNumbers.length > 0 ? 
+`BASE DE NÚMEROS:
+A base completa com ${data.phoneNumbers.length} números está anexada no arquivo CSV.` : ''}
 
 ---
 Esta é uma notificação automática do sistema Tauro Digital
@@ -111,27 +180,31 @@ const generateEmailTemplate = (data: EmailNotificationData): string => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Notificação de Campanha SMS</title>
+        <title>Notificação de Campanha SMS - Tauro Digital</title>
         <style>
             body { font-family: 'Inter', Arial, sans-serif; line-height: 1.6; color: #1a202c; margin: 0; padding: 0; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #1a365d 0%, #2d5282 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-            .content { background: #f7fafc; padding: 30px; border-radius: 0 0 10px 10px; }
+            .header { background: linear-gradient(135deg, #334155 0%, #1e293b 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
             .stats { display: table; width: 100%; margin: 20px 0; }
-            .stat { display: table-cell; text-align: center; background: white; padding: 15px; border-radius: 8px; margin: 0 5px; vertical-align: top; }
-            .stat-value { font-size: 24px; font-weight: bold; color: #1a365d; }
-            .stat-label { font-size: 12px; color: #4a5568; text-transform: uppercase; }
-            .success { color: #38a169; }
-            .danger { color: #e53e3e; }
-            .info { color: #3182ce; }
-            .message-preview { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ed8936; margin: 20px 0; }
-            .footer { text-align: center; margin-top: 30px; color: #4a5568; font-size: 12px; }
-            .info-row { margin: 10px 0; }
-            .info-label { font-weight: bold; color: #2d3748; }
+            .stat { display: table-cell; text-align: center; background: white; padding: 15px; border-radius: 8px; margin: 0 5px; vertical-align: top; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .stat-value { font-size: 24px; font-weight: bold; color: #334155; }
+            .stat-label { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; }
+            .success { color: #059669; }
+            .danger { color: #dc2626; }
+            .info { color: #0369a1; }
+            .message-preview { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #f97316; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .attachment-info { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 12px; }
+            .info-row { margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+            .info-label { font-weight: 600; color: #334155; }
+            .logo { max-height: 40px; margin-bottom: 10px; }
             
             @media screen and (max-width: 600px) {
                 .stats { display: block; }
                 .stat { display: block; margin: 10px 0; }
+                .container { padding: 10px; }
+                .header, .content { padding: 20px; }
             }
         </style>
     </head>
@@ -139,23 +212,24 @@ const generateEmailTemplate = (data: EmailNotificationData): string => {
         <div class="container">
             <div class="header">
                 <h1>📱 Nova Campanha SMS Enviada</h1>
-                <p>ID da Campanha: ${data.campaignId}</p>
+                <p style="opacity: 0.9; margin: 5px 0;">Tauro Digital - Plataforma Profissional de SMS</p>
+                <p style="font-size: 14px; opacity: 0.8;">ID da Campanha: ${data.campaignId}</p>
             </div>
             
             <div class="content">
-                <h2 style="color: #1a365d;">Resumo da Campanha</h2>
+                <h2 style="color: #334155; margin-bottom: 20px;">📊 Resumo da Campanha</h2>
                 
                 <div class="info-row">
-                    <span class="info-label">Data/Hora:</span> ${formattedDate}
+                    <span class="info-label">📅 Data/Hora:</span> ${formattedDate}
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Usuário:</span> ${data.userName || 'N/A'} (${data.userEmail || 'N/A'})
+                    <span class="info-label">👤 Usuário:</span> ${data.userName || 'N/A'} (${data.userEmail || 'N/A'})
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Remetente:</span> ${data.senderName}
+                    <span class="info-label">📤 Remetente:</span> ${data.senderName}
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Custo:</span> ${data.coinsUsed} moedas
+                <div class="info-row" style="border-bottom: none;">
+                    <span class="info-label">💰 Custo:</span> ${data.coinsUsed} moedas
                 </div>
                 
                 <div class="stats">
@@ -172,24 +246,42 @@ const generateEmailTemplate = (data: EmailNotificationData): string => {
                         <div class="stat-label">Falhas</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value" style="color: #ed8936;">${successRate}%</div>
+                        <div class="stat-value" style="color: #f97316;">${successRate}%</div>
                         <div class="stat-label">Taxa de Sucesso</div>
                     </div>
                 </div>
                 
                 <div class="message-preview">
-                    <h3 style="color: #1a365d;">Conteúdo da Mensagem:</h3>
-                    <p><em>"${data.messageContent}"</em></p>
+                    <h3 style="color: #334155; margin-top: 0;">💬 Conteúdo da Mensagem:</h3>
+                    <p style="font-style: italic; background: #f1f5f9; padding: 15px; border-radius: 6px; margin: 10px 0;">"${data.messageContent}"</p>
                 </div>
+                
+                ${data.phoneNumbers && data.phoneNumbers.length > 0 ? `
+                <div class="attachment-info">
+                    <h3 style="color: #92400e; margin-top: 0; display: flex; align-items: center;">
+                        📎 Base de Números Anexada
+                    </h3>
+                    <p style="margin: 10px 0;">
+                        <strong>Arquivo:</strong> base-numeros-campanha-${data.campaignId}.csv<br>
+                        <strong>Total de números:</strong> ${data.phoneNumbers.length}<br>
+                        <strong>Formato:</strong> CSV (UTF-8)
+                    </p>
+                    <p style="font-size: 12px; color: #92400e; margin: 10px 0 0 0;">
+                        💡 <em>A base completa está disponível no arquivo anexo para análise e aprovação.</em>
+                    </p>
+                </div>
+                ` : ''}
                 
                 <div class="footer">
                     <p>Esta é uma notificação automática do sistema Tauro Digital.</p>
-                    <p style="color: #ed8936; font-weight: bold;">© 2025 Tauro Digital - A sua plataforma de SMS!</p>
+                    <p style="color: #f97316; font-weight: bold; margin-top: 10px;">© 2025 Tauro Digital - A sua plataforma de SMS!</p>
+                    <p style="margin-top: 10px; font-size: 11px;">
+                        🌐 <a href="https://app.taurodigital.com.br" style="color: #334155;">app.taurodigital.com.br</a>
+                    </p>
                 </div>
             </div>
         </div>
     </body>
     </html>
   `;
-};
 };

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { processPhoneNumbers, sendSMS } from '../../../../lib/smsService';
+import { sendCampaignNotification } from '@/lib/emailService';
+import { getUserById } from '@/lib/database';
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +23,29 @@ export async function POST(request: Request) {
 
     try {
       const result = await sendSMS(userId, phoneNumbers, senderName, messageContent);
+      
+      // Buscar dados do usuário para o email
+      const user = await getUserById(userId);
+      
+      // Gerar ID único para a campanha
+      const campaignId = `${userId}-${Date.now()}`;
+      
+      // Enviar notificação por email com a base de números
+      await sendCampaignNotification({
+        campaignId: campaignId,
+        userId: userId,
+        userEmail: user?.email,
+        userName: user?.username,
+        totalNumbers: result.totalCount,
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        senderName: senderName,
+        messageContent: messageContent,
+        sentAt: new Date().toISOString(),
+        coinsUsed: result.coinsUsed || result.totalCount,
+        phoneNumbers: phoneNumbers // Incluir a base de números
+      });
+
       return NextResponse.json(result);
     } catch (err: unknown) {
       // Capturar especificamente erros relacionados a saldo insuficiente

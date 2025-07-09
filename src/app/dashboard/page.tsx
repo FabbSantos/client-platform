@@ -137,7 +137,7 @@ export default function Dashboard() {
       <div className="space-y-8">
         <div>
           <motion.h1 
-            className="text-2xl font-bold text-gray-800 mb-1"
+            className="text-2xl font-bold text-tauro-dark mb-1"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -145,7 +145,7 @@ export default function Dashboard() {
             Dashboard
           </motion.h1>
           <motion.p 
-            className="text-gray-500"
+            className="text-tauro-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}

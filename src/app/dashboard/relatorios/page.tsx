@@ -296,7 +296,7 @@ export default function RelatoriosPage() {
       <div className="space-y-6">
         <div>
           <motion.h1 
-            className="text-2xl font-bold text-gray-800 mb-1"
+            className="text-2xl font-bold text-tauro-dark mb-1"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -304,7 +304,7 @@ export default function RelatoriosPage() {
             Relatórios
           </motion.h1>
           <motion.p 
-            className="text-gray-500"
+            className="text-tauro-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -315,24 +315,24 @@ export default function RelatoriosPage() {
         
         {/* Filtros e Estatísticas */}
         <motion.div 
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          className="bg-white p-6 rounded-lg shadow-sm border border-tauro-gray-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div className="flex flex-col lg:flex-row justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 lg:mb-0">Filtros</h3>
+            <h3 className="text-lg font-semibold text-tauro-dark mb-4 lg:mb-0">Filtros</h3>
             <div className="flex flex-wrap gap-4">
               {/* Seletor de tipo de exportação */}
               <div className="flex items-center space-x-2">
-                <label htmlFor="exportType" className="text-sm font-medium text-gray-700">
+                <label htmlFor="exportType" className="text-sm font-medium text-tauro-gray-700">
                   Tipo de exportação:
                 </label>
                 <select
                   id="exportType"
                   value={exportType}
                   onChange={(e) => setExportType(e.target.value as 'summary' | 'detailed')}
-                  className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-sm border border-tauro-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-tauro-primary"
                 >
                   <option value="summary">Resumo</option>
                   <option value="detailed">Detalhado por número</option>
@@ -342,7 +342,7 @@ export default function RelatoriosPage() {
               <button
                 onClick={exportToCSV}
                 disabled={filteredLogs.length === 0}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 py-2 bg-tauro-accent text-white rounded-md hover:bg-tauro-orange focus:outline-none focus:ring-2 focus:ring-tauro-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

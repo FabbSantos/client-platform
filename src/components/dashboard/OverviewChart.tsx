@@ -41,17 +41,17 @@ export default function OverviewChart({ data }: Props) {
         <h3 className="text-lg font-semibold text-tauro-dark">Histórico de Envios</h3>
         
         <div className="flex space-x-1 bg-tauro-gray-100 p-1 rounded-md">
-          {{
+          {[
             { id: '7dias', label: '7 dias' },
             { id: '30dias', label: '30 dias' },
             { id: 'todos', label: 'Todos' }
-          }.map((tab) => (
+          ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as '7dias' | '30dias' | 'todos')}
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 activeTab === tab.id 
-                  ? 'bg-tauro-primary text-white shadow-sm' 
+                  ? 'bg-tauro-primary text-black font-medium shadow-sm' 
                   : 'text-tauro-gray-600 hover:bg-tauro-gray-200'
               }`}
             >
