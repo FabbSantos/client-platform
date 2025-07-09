@@ -89,6 +89,8 @@ export const sendCampaignNotification = async (data: EmailNotificationData): Pro
       console.log('📎 Base de números anexada:', data.phoneNumbers.length, 'números');
     }
     
+
+    
     // URL de preview do Ethereal
     if (info.messageId) {
       const previewUrl = nodemailer.getTestMessageUrl(info);
