@@ -27,33 +27,33 @@ const MessagePreview = memo(({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <h3 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
-        <svg className="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <h3 className="text-lg font-medium text-tauro-dark mb-4 flex items-center">
+        <svg className="w-5 h-5 mr-2 text-tauro-accent" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
           <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
           <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
         </svg>
         Preview da Mensagem
       </h3>
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-tauro-gray-50 border border-tauro-gray-200 rounded-lg overflow-hidden">
         {/* Cabeçalho do preview com operadora e hora */}
-        <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
-          <div className="text-xs text-gray-500">Serviço de Mensagens</div>
-          <div className="text-xs text-gray-500">15:42</div>
+        <div className="bg-tauro-gray-100 px-4 py-2 flex justify-between items-center">
+          <div className="text-xs text-tauro-gray-500">Tauro Digital SMS</div>
+          <div className="text-xs text-tauro-gray-500">15:42</div>
         </div>
 
         {/* Conteúdo da mensagem */}
         <div className="p-4 max-h-[300px] overflow-y-auto">
           {/* Bolha da mensagem com animação apenas no conteúdo interno */}
-          <div className="bg-blue-50 border-blue-100 border rounded-lg p-3 mb-2 shadow-sm">
+          <div className="bg-tauro-light bg-opacity-10 border-tauro-primary border rounded-lg p-3 mb-2 shadow-sm">
             {/* Remetente - renderiza sem reanimação */}
-            <div className="text-blue-800 font-semibold mb-1">
+            <div className="text-tauro-primary font-semibold mb-1">
               {senderName || 'Remetente'}
             </div>
             
             {/* Conteúdo - aqui é onde aplicamos animação específica */}
             <motion.div 
-              className="text-gray-700 break-words"
+              className="text-tauro-dark break-words"
               key={messageContent} // Importante: o key força reanimação apenas deste elemento
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -63,13 +63,13 @@ const MessagePreview = memo(({
             </motion.div>
             
             {/* Data e hora */}
-            <div className="text-right text-xs text-gray-400 mt-2">
+            <div className="text-right text-xs text-tauro-gray-400 mt-2">
               Agora mesmo
             </div>
           </div>
           
           {/* Contador de SMS */}
-          <div className="mt-3 text-center text-xs text-gray-500 py-1 px-2 bg-gray-100 rounded-full inline-block mx-auto">
+          <div className="mt-3 text-center text-xs text-tauro-gray-500 py-1 px-2 bg-tauro-gray-100 rounded-full inline-block mx-auto">
             {smsInfo.smsCount > 1 
               ? `Mensagem dividida em ${smsInfo.smsCount} SMS` 
               : `1 SMS (${smsInfo.length}/160 caracteres)`}
@@ -78,7 +78,7 @@ const MessagePreview = memo(({
       </div>
       
       {/* Informações sobre o SMS */}
-      <div className="mt-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+      <div className="mt-4 bg-tauro-light bg-opacity-10 p-3 rounded-lg border border-tauro-light border-opacity-30">
         <h4 className="text-sm font-medium text-blue-800 mb-1">Detalhes do Envio</h4>
         
         <div className="space-y-1">

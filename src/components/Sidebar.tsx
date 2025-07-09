@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useCoins } from '../hooks/useCoinsContext';
+import Image from 'next/image';
 
 // Props para o componente Sidebar
 interface SidebarProps {
@@ -57,12 +58,12 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-lg">
+    <div className="flex flex-col h-full bg-gradient-to-b from-tauro-primary to-tauro-dark text-white shadow-lg">
       {/* Botão para recolher/expandir a sidebar */}
       <div className="absolute -right-3 top-20">
         <button
           onClick={onToggleCollapse}
-          className="bg-blue-700 hover:bg-blue-600 text-white rounded-full p-1 shadow-lg transition-all duration-300"
+          className="bg-tauro-secondary hover:bg-tauro-primary text-white rounded-full p-1 shadow-lg transition-all duration-300"
         >
           <svg 
             className={`h-5 w-5 transform transition-transform duration-300 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
@@ -84,25 +85,33 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
       {/* Logo e título */}
       <div className={`p-6 ${isCollapsed ? 'flex justify-center items-center' : ''}`}>
         {isCollapsed ? (
-          <div className="text-2xl font-bold text-white">N</div>
+          <div className="text-2xl font-bold text-tauro-accent">T</div>
         ) : (
           <>
-            <h1 className="text-2xl font-bold text-white">Nexus SMS</h1>
-            <p className="text-blue-200 text-sm mt-1">Plataforma de envios em massa</p>
+            <div className="flex items-center mb-2">
+              <Image
+                src="/logoWTauroFull.png"
+                alt="Tauro Digital"
+                width={180}
+                height={60}
+                className="h-auto w-auto max-h-12"
+                priority
+              />
+            </div>
           </>
         )}
       </div>
 
       {/* Saldo de moedas */}
       <div className={`px-6 py-3 mb-4 ${isCollapsed ? 'flex justify-center' : ''}`}>
-        <div className={`bg-blue-950 bg-opacity-40 rounded-lg p-3 flex items-center ${isCollapsed ? 'w-10 h-10 justify-center' : ''}`}>
+        <div className={`bg-tauro-dark bg-opacity-40 rounded-lg p-3 flex items-center ${isCollapsed ? 'w-10 h-10 justify-center' : ''}`}>
           <CoinIcon />
           {!isCollapsed && (
             <div className="ml-3">
-              <p className="text-xs text-blue-200">Saldo disponível</p>
+              <p className="text-xs text-tauro-gray-200">Saldo disponível</p>
               <motion.p
                 key={coins}
-                className="text-lg font-semibold text-yellow-400"
+                className="text-lg font-semibold text-tauro-gold"
                 initial={{ scale: 1.1 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.3 }}
@@ -123,15 +132,15 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
                 <div
                   className={`flex items-center ${isCollapsed ? 'justify-center' : ''} px-3 py-3 rounded-lg transition-colors duration-200 ${
                     isActive(item.path)
-                      ? 'bg-blue-700 text-white'
-                      : 'text-blue-200 hover:bg-blue-700/50 hover:text-white'
+                      ? 'bg-tauro-secondary text-white'
+                      : 'text-tauro-gray-200 hover:bg-tauro-secondary hover:bg-opacity-50 hover:text-white'
                   }`}
                 >
                   <span className={isCollapsed ? '' : 'mr-3'}>{item.icon}</span>
                   {!isCollapsed && <span>{item.name}</span>}
                   {isActive(item.path) && !isCollapsed && (
                     <motion.div
-                      className="w-1 h-full absolute right-0 rounded-l-md"
+                      className="w-1 h-full absolute right-0 rounded-l-md bg-tauro-accent"
                       layoutId="activeIndicator"
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
@@ -144,16 +153,17 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
       </nav>
 
       {/* Rodapé */}
-      <div className={`p-4 text-xs text-blue-300 border-t border-blue-700 ${isCollapsed ? 'text-center' : ''}`}>
+      <div className={`p-4 text-xs text-tauro-gray-300 border-t border-tauro-secondary ${isCollapsed ? 'text-center' : ''}`}>
         {isCollapsed ? (
-          <p>v1.0</p>
+          <p>v1.1</p>
         ) : (
           <>
-            <p>© 2025 Nexus SMS</p>
-            <p>Versão 1.0.0</p>
+            <p>© 2025 Tauro Digital</p>
+            <p>Versão 1.1.4</p>
           </>
         )}
       </div>
     </div>
   );
+}
 }

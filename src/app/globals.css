@@ -1,24 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 245, 245, 245;
+  --foreground-rgb: 26, 32, 44;
+  --background-start-rgb: 247, 250, 252;
   --background-end-rgb: 255, 255, 255;
-  --font-comfortaa: 'Comfortaa', sans-serif;
+  --tauro-primary: 26, 54, 93;
+  --tauro-accent: 237, 137, 54;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
+      135deg,
       rgb(var(--background-start-rgb)),
       rgb(var(--background-end-rgb))
     )
     fixed;
-  font-family: var(--font-comfortaa);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 /* Aplicando a fonte a todos os elementos de texto */
 h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, a {
-  font-family: var(--font-comfortaa);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollbar personalizada para combinar com o tema */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(237, 242, 247);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--tauro-primary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--tauro-accent));
 }

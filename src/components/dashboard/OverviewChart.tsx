@@ -38,21 +38,21 @@ export default function OverviewChart({ data }: Props) {
       transition={{ duration: 0.5, delay: 0.1 }}
     >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">Histórico de Envios</h3>
+        <h3 className="text-lg font-semibold text-tauro-dark">Histórico de Envios</h3>
         
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-md">
-          {[
+        <div className="flex space-x-1 bg-tauro-gray-100 p-1 rounded-md">
+          {{
             { id: '7dias', label: '7 dias' },
             { id: '30dias', label: '30 dias' },
             { id: 'todos', label: 'Todos' }
-          ].map((tab) => (
+          }.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as '7dias' | '30dias' | 'todos')}
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 activeTab === tab.id 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-200'
+                  ? 'bg-tauro-primary text-white shadow-sm' 
+                  : 'text-tauro-gray-600 hover:bg-tauro-gray-200'
               }`}
             >
               {tab.label}
@@ -91,13 +91,13 @@ export default function OverviewChart({ data }: Props) {
             <Bar 
               dataKey="enviados" 
               name="SMS Enviados" 
-              fill="#3b82f6" 
+              fill="#2d5282" 
               radius={[4, 4, 0, 0]}
             />
             <Bar 
               dataKey="falhas" 
               name="Falhas" 
-              fill="#ef4444" 
+              fill="#ed8936" 
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

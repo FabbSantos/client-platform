@@ -25,9 +25,23 @@ export interface SMSLog {
   messageContent?: string; // Novo campo opcional
 }
 
+// Nova interface para logs detalhados por número
+export interface SMSDetailLog {
+  id: string;
+  userId: string;
+  campaignId: string; // ID do SMSLog pai
+  phoneNumber: string;
+  status: 'success' | 'failed';
+  errorMessage?: string;
+  sentAt: string;
+  senderName?: string;
+  messageContent?: string;
+}
+
 // Referências para as coleções
 const usersCollection = collection(db, 'users');
 const logsCollection = collection(db, 'smsLogs');
+const detailLogsCollection = collection(db, 'smsDetailLogs'); // Nova coleção
 
 // Função auxiliar para converter DocumentData em tipo específico
 const convertDocToUser = (doc: QueryDocumentSnapshot<DocumentData>): User => {
@@ -50,6 +64,21 @@ const convertDocToSMSLog = (doc: QueryDocumentSnapshot<DocumentData>): SMSLog =>
     totalNumbers: data.totalNumbers,
     successCount: data.successCount,
     failureCount: data.failureCount,
+    senderName: data.senderName,
+    messageContent: data.messageContent
+  };
+};
+
+const convertDocToSMSDetailLog = (doc: QueryDocumentSnapshot<DocumentData>): SMSDetailLog => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    userId: data.userId,
+    campaignId: data.campaignId,
+    phoneNumber: data.phoneNumber,
+    status: data.status,
+    errorMessage: data.errorMessage,
+    sentAt: data.sentAt,
     senderName: data.senderName,
     messageContent: data.messageContent
   };
@@ -90,6 +119,20 @@ export const getUserByEmail = async (email: string): Promise<User | undefined> =
   }
 
   return convertDocToUser(snapshot.docs[0]);
+};
+
+// Nova função para buscar usuário por ID
+export const getUserById = async (userId: string): Promise<User | undefined> => {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      return convertDocToUser(userDoc);
+    }
+    return undefined;
+  } catch (error) {
+    console.error('Erro ao buscar usuário por ID:', error);
+    return undefined;
+  }
 };
 
 // Nova função para atualizar o saldo de moedas do usuário
@@ -152,6 +195,51 @@ export const getUserLogs = async (userId: string): Promise<SMSLog[]> => {
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map(convertDocToSMSLog);
+};
+
+// Nova função para salvar logs detalhados com tratamento de erro
+export const saveSMSDetailLogs = async (detailLogs: Omit<SMSDetailLog, 'id'>[]): Promise<void> => {
+  try {
+    // Usar Promise.all para salvar todos os logs de uma vez
+    const promises = detailLogs.map(log => {
+      // Remover campos undefined antes de salvar
+      const cleanLog = Object.fromEntries(
+        Object.entries(log).filter(([, value]) => value !== undefined)
+      );
+      return addDoc(detailLogsCollection, cleanLog);
+    });
+    
+    await Promise.all(promises);
+    console.log(`Salvos ${detailLogs.length} logs detalhados com sucesso`);
+  } catch (error) {
+    console.error('Erro ao salvar logs detalhados:', error);
+    // Por enquanto, não vamos interromper o processo se os logs detalhados falharem
+    // Isso permite que o SMS seja enviado mesmo se os logs detalhados não puderem ser salvos
+  }
+};
+
+// Nova função para buscar logs detalhados por campanha
+export const getCampaignDetailLogs = async (campaignId: string): Promise<SMSDetailLog[]> => {
+  try {
+    const q = query(detailLogsCollection, where("campaignId", "==", campaignId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(convertDocToSMSDetailLog);
+  } catch (error) {
+    console.error('Erro ao buscar logs detalhados da campanha:', error);
+    return [];
+  }
+};
+
+// Nova função para buscar todos os logs detalhados de um usuário
+export const getUserDetailLogs = async (userId: string): Promise<SMSDetailLog[]> => {
+  try {
+    const q = query(detailLogsCollection, where("userId", "==", userId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(convertDocToSMSDetailLog);
+  } catch (error) {
+    console.error('Erro ao buscar logs detalhados do usuário:', error);
+    return [];
+  }
 };
 
 // Nova função para excluir um log de SMS

@@ -70,7 +70,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button 
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-          className="p-2 rounded-md bg-blue-600 text-white shadow-lg"
+          className="p-2 rounded-md bg-tauro-primary text-white shadow-lg"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             {isMobileSidebarOpen ? (

@@ -83,10 +83,10 @@ export default function AddCoinsModal({ isOpen, onClose, onAddCoins }: AddCoinsM
           exit="exit"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Adicionar Moedas</h2>
+            <h2 className="text-xl font-bold text-tauro-dark">Adicionar Moedas</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-tauro-gray-500 hover:text-tauro-gray-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -131,13 +131,13 @@ export default function AddCoinsModal({ isOpen, onClose, onAddCoins }: AddCoinsM
                 onChange={(e) => setAmount(Number(e.target.value))}
                 whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.3)" }}
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-tauro-gray-500">
                 Utilizaremos o cartão registrado para esta compra
               </p>
             </div>
             
             <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-tauro-gray-500">
                 Total: R$ {(amount * 0.01).toFixed(2)}
               </div>
               <div className="space-x-2">

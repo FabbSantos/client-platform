@@ -19,7 +19,7 @@ export default function Home() {
 
   return (
     <motion.main
-      className="min-h-screen flex items-center justify-center bg-gray-50 px-4"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-tauro-gray-50 to-tauro-gray-100 px-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -36,7 +36,7 @@ export default function Home() {
 function LoadingState() {
   return (
     <div className="flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tauro-primary"></div>
     </div>
   );
 }

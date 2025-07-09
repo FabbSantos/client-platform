@@ -128,7 +128,7 @@ export default function LoginForm() {
         >
           <AnimatedButton
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-tauro-primary hover:bg-tauro-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tauro-primary"
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </AnimatedButton>
@@ -141,13 +141,13 @@ export default function LoginForm() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-tauro-gray-600">
           Não tem uma conta?{' '}
           <motion.span 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/register" className="font-medium text-tauro-accent hover:text-tauro-orange">
               Registre-se
             </Link>
           </motion.span>

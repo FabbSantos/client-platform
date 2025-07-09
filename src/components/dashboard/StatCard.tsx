@@ -22,11 +22,11 @@ export default function StatCard({
   // Definir classes de cores para cada variante
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-600',
-      icon: 'text-blue-500',
-      iconBg: 'bg-blue-100'
+      bg: 'bg-tauro-light bg-opacity-10',
+      border: 'border-tauro-light border-opacity-30',
+      text: 'text-tauro-primary',
+      icon: 'text-tauro-light',
+      iconBg: 'bg-tauro-light bg-opacity-20'
     },
     green: {
       bg: 'bg-green-50',
@@ -36,11 +36,11 @@ export default function StatCard({
       iconBg: 'bg-green-100'
     },
     yellow: {
-      bg: 'bg-yellow-50',
-      border: 'border-yellow-200',
-      text: 'text-yellow-600',
-      icon: 'text-yellow-500',
-      iconBg: 'bg-yellow-100'
+      bg: 'bg-tauro-gold bg-opacity-10',
+      border: 'border-tauro-gold border-opacity-30',
+      text: 'text-tauro-accent',
+      icon: 'text-tauro-gold',
+      iconBg: 'bg-tauro-gold bg-opacity-20'
     },
     red: {
       bg: 'bg-red-50',

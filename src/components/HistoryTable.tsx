@@ -91,7 +91,7 @@ export default function HistoryTable({ userId, refreshTrigger = 0 }: HistoryTabl
         type="fade"
       >
         <motion.h3 
-          className="text-xl font-bold mb-4"
+          className="text-xl font-bold mb-4 text-tauro-dark"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}

@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '../../../components/MainLayout';
-import { SMSLog } from '../../../lib/database';
+import { SMSLog, SMSDetailLog } from '../../../lib/database';
 
 export default function RelatoriosPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -21,6 +21,10 @@ export default function RelatoriosPage() {
     field: 'date',
     direction: 'desc'
   });
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [exportType, setExportType] = useState<'summary' | 'detailed'>('summary');
 
   // Função para buscar logs
   const fetchLogs = useCallback(async (uid: string) => {
@@ -122,36 +126,90 @@ export default function RelatoriosPage() {
     }));
   };
 
-  const exportToCSV = () => {
+  const exportToCSV = async () => {
     if (!filteredLogs.length) return;
     
-    // Cabeçalhos
-    const headers = ['Data', 'Total de Números', 'Sucessos', 'Falhas', 'Taxa de Sucesso'];
-    
-    // Converter dados para CSV
-    const csvData = filteredLogs.map(log => {
-      const date = new Date(log.date).toLocaleString('pt-BR');
-      const successRate = ((log.successCount / log.totalNumbers) * 100).toFixed(2);
+    if (exportType === 'summary') {
+      // Exportação resumida (como estava antes)
+      const headers = ['Data', 'Total de Números', 'Sucessos', 'Falhas', 'Taxa de Sucesso'];
       
-      return [
-        date,
-        log.totalNumbers,
-        log.successCount,
-        log.failureCount,
-        `${successRate}%`
-      ].join(',');
-    });
-    
-    // Montar CSV
-    const csv = [headers.join(','), ...csvData].join('\n');
-    
-    // Criar blob e link para download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const csvData = filteredLogs.map(log => {
+        const date = new Date(log.date).toLocaleString('pt-BR');
+        const successRate = ((log.successCount / log.totalNumbers) * 100).toFixed(2);
+        
+        return [
+          date,
+          log.totalNumbers,
+          log.successCount,
+          log.failureCount,
+          `${successRate}%`
+        ].join(',');
+      });
+      
+      const csv = [headers.join(','), ...csvData].join('\n');
+      downloadCSV(csv, 'relatorio-resumo-sms');
+    } else {
+      // Exportação detalhada (novo)
+      try {
+        const allDetailLogs: SMSDetailLog[] = [];
+        
+        // Buscar logs detalhados para cada campanha filtrada
+        for (const log of filteredLogs) {
+          const response = await fetch(`/api/sms/detail-history?userId=${userId}&campaignId=${log.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            allDetailLogs.push(...data.detailLogs);
+          }
+        }
+        
+        if (allDetailLogs.length === 0) {
+          alert('Nenhum dado detalhado encontrado para as campanhas selecionadas.');
+          return;
+        }
+        
+        // Cabeçalhos para exportação detalhada
+        const headers = [
+          'Data de Envio', 
+          'Número de Telefone', 
+          'Status', 
+          'Remetente', 
+          'Mensagem', 
+          'Erro (se houver)'
+        ];
+        
+        const csvData = allDetailLogs.map(detail => {
+          const date = new Date(detail.sentAt).toLocaleString('pt-BR');
+          const status = detail.status === 'success' ? 'Enviado' : 'Falha';
+          const message = detail.messageContent?.replace(/"/g, '""') || ''; // Escape aspas duplas
+          const error = detail.errorMessage || '';
+          
+          return [
+            `"${date}"`,
+            `"${detail.phoneNumber}"`,
+            `"${status}"`,
+            `"${detail.senderName || ''}"`,
+            `"${message}"`,
+            `"${error}"`
+          ].join(',');
+        });
+        
+        const csv = [headers.join(','), ...csvData].join('\n');
+        downloadCSV(csv, 'relatorio-detalhado-sms');
+        
+      } catch (error) {
+        console.error('Erro ao exportar dados detalhados:', error);
+        alert('Erro ao buscar dados detalhados para exportação.');
+      }
+    }
+  };
+
+  const downloadCSV = (csv: string, filename: string) => {
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // \uFEFF para BOM UTF-8
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio-sms-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `${filename}-${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     
     document.body.appendChild(link);
@@ -182,6 +240,46 @@ export default function RelatoriosPage() {
       avgSuccessRate
     };
   })();
+
+  const handleDelete = async (logId: string) => {
+    setDeletingId(logId);
+    setDeleteError('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`/api/sms/history/${logId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erro ao excluir registro');
+      }
+      
+      // Atualizar a lista após excluir
+      const updatedLogs = logs.filter(log => log.id !== logId);
+      setLogs(updatedLogs);
+      setFilteredLogs(filteredLogs.filter(log => log.id !== logId));
+      
+      // Exibir mensagem de sucesso
+      setSuccessMessage('Registro excluído com sucesso!');
+      
+      // Esconder a mensagem após alguns segundos
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 4000);
+      
+    } catch (err: unknown) {
+      console.error('Erro ao excluir:', err);
+      setDeleteError((err as { message: string })?.message || 'Erro ao excluir o registro');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -225,6 +323,22 @@ export default function RelatoriosPage() {
           <div className="flex flex-col lg:flex-row justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 lg:mb-0">Filtros</h3>
             <div className="flex flex-wrap gap-4">
+              {/* Seletor de tipo de exportação */}
+              <div className="flex items-center space-x-2">
+                <label htmlFor="exportType" className="text-sm font-medium text-gray-700">
+                  Tipo de exportação:
+                </label>
+                <select
+                  id="exportType"
+                  value={exportType}
+                  onChange={(e) => setExportType(e.target.value as 'summary' | 'detailed')}
+                  className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="summary">Resumo</option>
+                  <option value="detailed">Detalhado por número</option>
+                </select>
+              </div>
+              
               <button
                 onClick={exportToCSV}
                 disabled={filteredLogs.length === 0}
@@ -332,6 +446,40 @@ export default function RelatoriosPage() {
           </div>
         </motion.div>
         
+        {/* Snackbars de feedback */}
+        <AnimatePresence>
+          {deleteError && (
+            <motion.div 
+              className="fixed bottom-4 right-4 z-50 p-3 bg-red-100 text-red-700 rounded-md shadow-lg"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              transition={{ duration: 0.3 }}
+            >
+              {deleteError}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {successMessage && (
+            <motion.div 
+              className="fixed bottom-4 right-4 z-50"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            >
+              <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {successMessage}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         {/* Tabela de Resultados */}
         <motion.div 
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden"
@@ -421,6 +569,12 @@ export default function RelatoriosPage() {
                           )}
                         </div>
                       </th>
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Ações
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -458,6 +612,25 @@ export default function RelatoriosPage() {
                           </td>
                           <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${rateColorClass}`}>
                             {successRate}%
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                            <button
+                              onClick={() => handleDelete(log.id)}
+                              disabled={deletingId === log.id}
+                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              {deletingId === log.id ? (
+                                <svg className="animate-spin h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="h-4 w-4 text-red-500 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                              {deletingId === log.id ? 'Excluindo...' : 'Excluir'}
+                            </button>
                           </td>
                         </motion.tr>
                       );

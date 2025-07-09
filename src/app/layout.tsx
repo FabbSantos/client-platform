@@ -12,10 +12,10 @@ const comfortaa = Comfortaa({
 });
 
 export const metadata: Metadata = {
-  title: 'Plataforma de Envio SMS',
-  description: 'Uma plataforma para envio de SMS em massa',
+  title: 'Tauro Digital - Plataforma SMS',
+  description: 'A sua plataforma completa para envio de SMS em massa',
   icons: {
-    icon: '/vercel.svg',
+    icon: '/favicon.ico',
   }
 }
 
