@@ -3,12 +3,5 @@
     "src/app/api/sms/send/route.ts": {
       "maxDuration": 30
     }
-  },
-  "env": {
-    "EMAIL_HOST": "@email-host",
-    "EMAIL_PORT": "@email-port",
-    "EMAIL_USER": "@email-user",
-    "EMAIL_PASS": "@email-pass",
-    "EMAIL_FROM": "@email-from"
   }
 }
