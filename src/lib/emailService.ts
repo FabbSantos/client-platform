@@ -1,6 +1,4 @@
 import nodemailer from 'nodemailer';
-import fs from 'fs';
-import path from 'path';
 
 export interface EmailNotificationData {
   campaignId: string;
@@ -44,55 +42,29 @@ const createTransporter = () => {
   });
 };
 
-// Função para criar arquivo CSV com a base de números
-const createPhoneNumbersFile = async (phoneNumbers: string[], campaignId: string): Promise<string> => {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fileName = `base-numeros-${campaignId}-${timestamp}.csv`;
-  const filePath = path.join(process.cwd(), 'temp', fileName);
-  
-  // Criar diretório temp se não existir
-  const tempDir = path.join(process.cwd(), 'temp');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-  
+// Função para criar CSV em memória (compatível com Vercel)
+const createPhoneNumbersCSV = (phoneNumbers: string[]): Buffer => {
   // Criar conteúdo CSV
   const csvContent = [
     'Número de Telefone',
     ...phoneNumbers
   ].join('\n');
   
-  // Escrever arquivo
-  fs.writeFileSync(filePath, '\uFEFF' + csvContent, 'utf8'); // \uFEFF para BOM UTF-8
-  
-  return filePath;
-};
-
-// Função para limpar arquivos temporários
-const cleanupTempFile = (filePath: string) => {
-  try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log('📁 Arquivo temporário removido:', filePath);
-    }
-  } catch (error) {
-    console.error('❌ Erro ao remover arquivo temporário:', error);
-  }
+  // Retornar buffer em memória em vez de arquivo
+  return Buffer.from('\uFEFF' + csvContent, 'utf8'); // \uFEFF para BOM UTF-8
 };
 
 export const sendCampaignNotification = async (data: EmailNotificationData): Promise<void> => {
-  let tempFilePath: string | null = null;
-  
   try {
     const transporter = createTransporter();
     
-    // Criar anexo se houver números de telefone
+    // Criar anexo em memória se houver números de telefone
     const attachments: import('nodemailer/lib/mailer').Attachment[] = [];
     if (data.phoneNumbers && data.phoneNumbers.length > 0) {
-      tempFilePath = await createPhoneNumbersFile(data.phoneNumbers, data.campaignId);
+      const csvBuffer = createPhoneNumbersCSV(data.phoneNumbers);
       attachments.push({
         filename: `base-numeros-campanha-${data.campaignId}.csv`,
-        path: tempFilePath,
+        content: csvBuffer,
         contentType: 'text/csv; charset=utf-8'
       });
     }
@@ -120,28 +92,22 @@ export const sendCampaignNotification = async (data: EmailNotificationData): Pro
     // URL de preview do Ethereal
     if (info.messageId) {
       const previewUrl = nodemailer.getTestMessageUrl(info);
-      console.log('📧 Preview do email no Ethereal:', previewUrl);
-      console.log('🔗 Acesse o link acima para visualizar o email enviado');
+      if (previewUrl) {
+        console.log('📧 Preview do email no Ethereal:', previewUrl);
+        console.log('🔗 Acesse o link acima para visualizar o email enviado');
+      }
     }
     
   } catch (error) {
     console.error('❌ Erro ao enviar email de notificação:', error);
     // Não interromper o processo se o email falhar
-  } finally {
-    // Limpar arquivo temporário
-    if (tempFilePath) {
-      // Aguardar um pouco antes de limpar para garantir que o email foi enviado
-      setTimeout(() => {
-        cleanupTempFile(tempFilePath as string);
-      }, 5000);
-    }
   }
 };
 
 const generateTextTemplate = (data: EmailNotificationData): string => {
   const successRate = ((data.successCount / data.totalNumbers) * 100).toFixed(1);
   const formattedDate = new Date(data.sentAt).toLocaleString('pt-BR');
-  
+
   return `
 NOVA CAMPANHA SMS ENVIADA - TAURO DIGITAL
 
@@ -160,8 +126,8 @@ ESTATÍSTICAS:
 CONTEÚDO DA MENSAGEM:
 "${data.messageContent}"
 
-${data.phoneNumbers && data.phoneNumbers.length > 0 ? 
-`BASE DE NÚMEROS:
+${data.phoneNumbers && data.phoneNumbers.length > 0 ?
+      `BASE DE NÚMEROS:
 A base completa com ${data.phoneNumbers.length} números está anexada no arquivo CSV.` : ''}
 
 ---
@@ -173,7 +139,7 @@ Esta é uma notificação automática do sistema Tauro Digital
 const generateEmailTemplate = (data: EmailNotificationData): string => {
   const successRate = ((data.successCount / data.totalNumbers) * 100).toFixed(1);
   const formattedDate = new Date(data.sentAt).toLocaleString('pt-BR');
-  
+
   return `
     <!DOCTYPE html>
     <html lang="pt-BR">
